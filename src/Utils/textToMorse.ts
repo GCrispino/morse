@@ -81,13 +81,18 @@ const marks = {
     };
 }
 
-export const morseToGap = (morseCode: string) => 
-    morseCode
-        .replace(/--/g,'-*-') 
-        .replace(/-\./g,'-*.') 
-        .replace(/\.-/g,'.*-')
-        .replace(/\.\./g,'.*.')
+export const morseToGap = (morseCode: string) => {
+    return morseCode
+        .split(' ')
+        .map(c =>
+            c
+            .split('')
+            .map((y, i) => i < c.length - 1 ? `${y}*` : y)
+            .join('')
+        )
+        .join(' ')
         .split('')
-        .map(char => marks[char]);
+        .map(char => marks[char])
+}
 
 export default textToMorse;
