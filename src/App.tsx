@@ -33,24 +33,18 @@ const App: React.FC = () => {
   const [speed, setSpeed] = React.useState(100);
   const [pitch, setPitch] = React.useState(150);
   const [morse, setMorse] = React.useState('');
-  const [index, setIndex] = React.useState(0);
+  const index = React.useRef(0);
+  const [colorIndex, setColorIndex] = React.useState(0);
   const [hasSound, setSound] = React.useState(false);
 
-  React.useEffect(() => {
-    console.log(new Date(), index)
-  }, [index])
-
   const onFinishPlayingNote = (hasSound: boolean) => () => {
-    console.log('a')
     if (!hasSound)
       return ;
-    console.log(' b')
-    // console.log('acabou', new Date(), index)
       
-    const newIndex = index === morse.length - 1 ? 0 : index + 1
-    // console.log('acabou2', new Date(), newIndex)
+    const newIndex = index.current === morse.length - 1 ? 0 : index.current + 1
 
-    setIndex(newIndex);
+    index.current = newIndex;
+    setColorIndex(newIndex)
   };
 
   const playNotes = (notes: {
@@ -63,30 +57,20 @@ const App: React.FC = () => {
     const ps = notes.map(({ gap, hasSound }) => {
       return playNote(
         hasSound ? defaultFrequency : 0, defaultGap * gap,
-        //  onFinishPlayingNote(hasSound)
-        () => {
-          console.log({index})
-          setIndex(index + 1);
-          // console.log('a')
-          // if (!hasSound)
-          //   return ;
-          // console.log(' b')
-          // // console.log('acabou', new Date(), index)
-          //   console.log({index})
-          // const newIndex = index === morse.length - 1 ? 0 : index + 1
-          // // console.log('acabou2', new Date(), newIndex)
-          // console.log({newIndex})
-          // setIndex(newIndex);
-        });
+        onFinishPlayingNote(hasSound)
+      )
     });
   
     return seq(ps);
   }
-  // }, [speed, pitch, onFinishPlayingNote, index]);
-
+  
   React.useEffect(() => {
     if (morse.length !== 0 && hasSound){
-      playNotes(morseToGap(morse)).then(() => setSound(false));
+      playNotes(morseToGap(morse)).then(() => {
+        setSound(false)
+        index.current = 0;
+        setColorIndex(0)
+      });
     }
   }, [morse, hasSound])
 
@@ -98,9 +82,15 @@ const App: React.FC = () => {
       }} />
       <button onClick={() => setSound(!hasSound)}>Play</button>
       <p style={{fontSize: 32}}>
-        {morse.split('').map((m, i) => <span style={{
-          color: index === i ? 'red' : 'black'
-        }} >{m}</span>)}
+        {
+          morse.split('').map((m, i) => {
+            return <span key={i} style={{
+              color: !hasSound ? 'black' : colorIndex === i ? 'red' : 'black'
+            }}>
+              {m}
+            </span>
+            })
+        }
       </p>
       <div>
         <p>speed</p>
