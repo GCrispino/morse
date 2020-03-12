@@ -1,6 +1,29 @@
-import React from 'react';
+import React, { DetailsHTMLAttributes } from 'react';
 import './App.css';
 import {textToMorse, morseToGap} from './Utils/textToMorse';
+import { motion } from 'framer-motion';
+import styled from 'styled-components';
+
+type CharType = 'dot' | 'dash';
+
+const base = 4;
+const bigB = 3;
+
+const Dot =
+ styled(
+  motion.custom('div')
+  )`
+   border-radius: 100%;
+ `;
+
+const Dash =
+ styled(
+  motion.custom('div')
+  )``;
+
+const Space = styled.div<{mult: number}>`
+  width: ${({ mult }) => mult * (base + 2)}px
+`;
 
 // create web audio api context
 const audioCtx = new(window.AudioContext)();
@@ -67,7 +90,32 @@ const App: React.FC = () => {
         setIndex(0);
       });
     }
-  }, [morse, hasSound])
+  }, [morse, hasSound]);
+
+  const variants = {
+    initial: (charType: CharType) => {
+      const i = charType === 'dot' ? 1 : 4;
+      const frac = charType === 'dot' ? 1 : 2;
+      return {
+        height: base,
+        width: i * base,
+        marginRight: ((i * base * bigB / frac) - (i * base))/2,
+        marginLeft: ((i * base * bigB / frac) - (i * base))/2,
+        backgroundColor: 'black'
+      };
+    },
+    highlight: (charType: CharType) => {
+      const i = charType === 'dot' ? 1 : 4;
+      const frac = charType === 'dot' ? 1 : 2;
+      return {
+        height: base * bigB,
+        width: i * base * bigB / frac,
+        marginRight: 0,
+        marginLeft: 0,
+        backgroundColor: 'red'
+      };
+    }
+  }
 
   return (
     <div className="App">
@@ -76,17 +124,24 @@ const App: React.FC = () => {
         setText(e.target.value)
       }} />
       <button onClick={() => setSound(!hasSound)}>Play</button>
-      <p style={{fontSize: 32}}>
+
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 24
+      }}>
         {
-          morse.split('').map((m, i) => {
-            return <span key={i} style={{
-              color: !hasSound ? 'black' : index === i ? 'red' : 'black'
-            }}>
-              {m}
-            </span>
-            })
+          morse.split('').map((m, i) => 
+            m === '.' 
+              ? <Dot key={i} custom={'dot'} variants={variants} initial="initial" animate={!hasSound ? 'initial' : index === i ? 'highlight' : 'initial'} />
+              : m === '-' 
+                ? <Dash key={i} custom={'dash'} variants={variants} initial="initial" animate={!hasSound ? 'initial' : index === i ? 'highlight' : 'initial'} />
+                : <Space mult={2} key={i} />
+            )
         }
-      </p>
+      </div>
       <div>
         <p>speed</p>
         <input type="number" disabled={hasSound} value={speed} onChange={(e)=> {
