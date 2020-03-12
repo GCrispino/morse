@@ -123,7 +123,12 @@ const App: React.FC = () => {
         setMorse(textToMorse(e.target.value))
         setText(e.target.value)
       }} />
-      <button onClick={() => setSound(!hasSound)}>Play</button>
+      <button onClick={() => {
+        if (text.length === 0) {
+          return alert('Digite algo');
+        } 
+        
+        setSound(!hasSound)}}>Play</button>
 
       <div style={{
         display: 'flex',
@@ -143,16 +148,16 @@ const App: React.FC = () => {
         }
       </div>
       <div>
-        <p>speed</p>
-        <input type="number" disabled={hasSound} value={speed} onChange={(e)=> {
+        <p>speed: {speed}</p>
+        <input type="range" min={50} max={300} step={50} disabled={hasSound} value={speed} onChange={e => 
           setSpeed(Number(e.target.value))
-        }} />
+        }/>
       </div>
       <div>
-        <p>pitch</p>
-        <input type="number" disabled={hasSound} value={pitch} onChange={(e)=> {
+        <p>pitch: {pitch}</p>
+        <input type="range" min={50} max={500} step={10} disabled={hasSound} value={pitch} onChange={e => 
           setPitch(Number(e.target.value))
-        }} />
+        } />
       </div>
     </div>
   );
