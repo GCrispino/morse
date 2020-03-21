@@ -144,7 +144,7 @@ const App: React.FC = () => {
       <button disabled={!isPlaying} onClick={() => {
         setIsPlaying(false);
         refPlaying.current = false;
-      }}>Cancel</button>
+      }}>Stop</button>
 
       <div style={{
         display: 'flex',
