@@ -57,13 +57,23 @@ const App: React.FC = () => {
   const [pitch, setPitch] = React.useState(150);
   const [morse, setMorse] = React.useState('');
   const [index, setIndex] = React.useState(0);
-  const [hasSound, setSound] = React.useState(false);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const refPlaying = React.useRef(false);
 
-  const onFinishPlayingNote = (hasSound: boolean, gap: number) => () => {
-    if (!hasSound && gap !== 3)
-      return ;
+  const onFinishPlayingNote = (note: ReturnType<typeof morseToGap>[number]) => () => {
+    const { char } = note;
 
-    setIndex(i => i + 1);
+    const actions = {
+      '-': () => setIndex(i => i + 1),
+      '.': () => setIndex(i => i + 1),
+      ' ': () => setIndex(i => i + 1),
+      '*': () => null,
+      '/': () => setIndex(i => i + 1),
+    } as {
+    [key:string]: () => void;
+}
+    
+    actions[char]()
   };
 
   const playNotes = (notes: {

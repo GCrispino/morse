@@ -69,15 +69,16 @@ export const textToMorse = (word: string) =>
 // short gap (between letters): 000
 // medium gap (between words): 000 0 000 
 const marks = {
-    '-': {gap: 3, hasSound: true },
-    '.': {gap: 1, hasSound: true },
-    ' ': {gap: 3, hasSound: false },
-    '/': {gap: 1, hasSound: false },
-    '*': {gap: 1, hasSound: false}
+    '-': {gap: 3, hasSound: true, char: '-' },
+    '.': {gap: 1, hasSound: true, char: '.' },
+    ' ': {gap: 3, hasSound: false, char: ' ' },
+    '/': {gap: 1, hasSound: false, char: '/' },
+    '*': {gap: 1, hasSound: false, char: '*'}
 } as {
     [key:string]: {
         gap: number,
-        hasSound: boolean
+        hasSound: boolean,
+        char: string,
     };
 }
 
