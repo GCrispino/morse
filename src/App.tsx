@@ -31,17 +31,19 @@ const audioCtx = new(window.AudioContext)();
 const sleep = (ms: number) => 
   new Promise(resolve => setTimeout(resolve,ms));
 
-function playNote(frequency: number, duration: number, cb: () => void) {
+function playNote(frequency: number, duration: number, shouldContinuePlaying: () => boolean, onFinish: () => void) {
   // create Oscillator node
   const oscillator = audioCtx.createOscillator();
   oscillator.type = 'square';
   oscillator.frequency.value = frequency; // value in hertz
   oscillator.connect(audioCtx.destination);
   return async () => {
-    oscillator.start();
-    await sleep(duration);
-    oscillator.stop();
-    cb();
+    if (shouldContinuePlaying()){
+        oscillator.start();
+        await sleep(duration);
+        oscillator.stop();
+    }
+    onFinish();
   }
 }
 
@@ -76,17 +78,15 @@ const App: React.FC = () => {
     actions[char]()
   };
 
-  const playNotes = (notes: {
-    gap: number,
-    hasSound: boolean
-  }[]) => {
+  const playNotes = (notes: ReturnType<typeof morseToGap>) => {
     const defaultGap = speed;
     const defaultFrequency = pitch;
   
-    const ps = notes.map(({ gap, hasSound }) => {
+    const ps = notes.map(note => {
+      const { gap, hasSound } = note;
       return playNote(
-        hasSound ? defaultFrequency : 0, defaultGap * gap,
-        onFinishPlayingNote(hasSound, gap)
+        hasSound ? defaultFrequency : 0, defaultGap * gap, () => refPlaying.current ,
+        onFinishPlayingNote(note)
       )
     });
   
@@ -94,13 +94,14 @@ const App: React.FC = () => {
   }
   
   React.useEffect(() => {
-    if (morse.length !== 0 && hasSound){
+    if (morse.length !== 0 && isPlaying){
       playNotes(morseToGap(morse)).then(() => {
-        setSound(false);
+        refPlaying.current = false;
+        setIsPlaying(false);
         setIndex(0);
       });
     }
-  }, [morse, hasSound]);
+  }, [morse, isPlaying]);
 
   const variants = {
     initial: (charType: CharType) => {
@@ -129,7 +130,7 @@ const App: React.FC = () => {
 
   return (
     <div className="App">
-      <input disabled={hasSound} value={text} onChange={e => {
+      <input disabled={isPlaying} value={text} onChange={e => {
         setMorse(textToMorse(e.target.value))
         setText(e.target.value)
       }} />
@@ -138,7 +139,12 @@ const App: React.FC = () => {
           return alert('Digite algo');
         } 
         
-        setSound(!hasSound)}}>Play</button>
+        refPlaying.current = true;
+        setIsPlaying(!isPlaying)}}>Play</button>
+      <button disabled={!isPlaying} onClick={() => {
+        setIsPlaying(false);
+        refPlaying.current = false;
+      }}>Cancel</button>
 
       <div style={{
         display: 'flex',
@@ -150,22 +156,22 @@ const App: React.FC = () => {
         {
           morse.split('').map((m, i) => 
             m === '.' 
-              ? <Dot key={i} custom={'dot'} variants={variants} initial="initial" animate={!hasSound ? 'initial' : index === i ? 'highlight' : 'initial'} />
+              ? <Dot key={i} custom={'dot'} variants={variants} initial="initial" animate={!isPlaying ? 'initial' : index === i ? 'highlight' : 'initial'} />
               : m === '-' 
-                ? <Dash key={i} custom={'dash'} variants={variants} initial="initial" animate={!hasSound ? 'initial' : index === i ? 'highlight' : 'initial'} />
+                ? <Dash key={i} custom={'dash'} variants={variants} initial="initial" animate={!isPlaying ? 'initial' : index === i ? 'highlight' : 'initial'} />
                 : <Space mult={2} key={i} />
             )
         }
       </div>
       <div>
         <p>speed: {speed}</p>
-        <input type="range" min={50} max={300} step={50} disabled={hasSound} value={speed} onChange={e => 
+        <input type="range" min={50} max={300} step={50} disabled={isPlaying} value={speed} onChange={e => 
           setSpeed(Number(e.target.value))
         }/>
       </div>
       <div>
         <p>pitch: {pitch}</p>
-        <input type="range" min={50} max={500} step={10} disabled={hasSound} value={pitch} onChange={e => 
+        <input type="range" min={50} max={500} step={10} disabled={isPlaying} value={pitch} onChange={e => 
           setPitch(Number(e.target.value))
         } />
       </div>
